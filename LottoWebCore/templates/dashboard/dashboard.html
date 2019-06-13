@@ -1,0 +1,456 @@
+{% extends "__base__.html" %}
+
+{% load static %}
+
+{% block title %}LottoHUB | Dashboard{% endblock %}
+
+{% block scripts %}
+    <script src="/static/assets/js/angularjs-gauge.js"></script>{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="/static/assets/css/dashboard.css"/>
+    <noscript>
+        <link rel="stylesheet" href="/static/assets/css/noscript.css"/>
+    </noscript>
+{% endblock %}
+
+{% block theme_style %} {% endblock %}
+
+{% block body %}
+    <div id="wrapper">
+        <section id="LHHeader" class="LHFields">
+            <ul class="icons">
+                <a ng-click="ActiveForm=null" href="">
+                    <li><i class="material-icons LHButtons">poll</i></li>
+                </a>
+                <a ng-click="ActiveForm='TCK_E'" href="">
+                    <li><i class="material-icons LHButtons">receipt</i></li>
+                </a>
+                <a ng-click="ActiveForm='TCK_A'" href="">
+                    <li><i class="material-icons LHButtons">beenhere</i></li>
+                </a>
+                <a ng-click="ActiveForm='PRF'" href="">
+                    <li><i class="material-icons LHButtons">person_pin</i></li>
+                </a>
+                <a href="{% url 'logout' %}">
+                    <li><i class="material-icons LHButtons">exit_to_app</i></li>
+                </a>
+            </ul>
+        </section>
+        <br>
+        <!-- Main -->
+        <md-card id="main">
+            <header>
+                {% if user.is_superuser %}
+                    <!--
+                    https://github.com/handsontable/handsontable
+                    https://handsontable.com/examples?manual-resize&manual-move&conditional-formatting&context-menu&filters&dropdown-menu&headers
+                    -->
+                    <div ng-hide="ActiveForm!='UNI'">
+                        <h2 style="text-align: left;">Cadastro de Universidade</h2>
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            {{ UForm.as_p }}
+                            <p><input type="submit"/></p>
+                        </form>
+                    </div>
+                    <div ng-hide="ActiveForm!='TCK_G'">
+                        <h2 style="text-align: left;">Gerar Tickets</h2>
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            {{ TForm.as_p }}
+                            <fieldset>
+                                <p>
+                                    <label>Número de Tickets</label>
+                                    <select name="TCKN">
+                                        <option value="6">6</option>
+                                        <option value="12">12</option>
+                                        <option value="18">18</option>
+                                        <option value="24">24</option>
+                                        <option value="30">30</option>
+                                        <option value="36">36</option>
+                                    </select>
+                                </p>
+                            </fieldset>
+                            <p><input type="submit"/></p>
+                        </form>
+                    </div>
+                    <div ng-hide="ActiveForm!='DIR'">
+                        <h2 style="text-align: left;">Cadastro de Centro Acadêmico</h2>
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            {{ SDForm.as_p }}
+                            <p style="text-align: right;">
+                                <md-button ng-click="ActiveForm='CTY'" class="md-raised md-warn">+Cidade</md-button>
+                                <input type="submit"/>
+                            </p>
+                        </form>
+                    </div>
+                    <div ng-hide="ActiveForm!='RAF'">
+                        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+                        {#                      <link rel="stylesheet" href="/resources/demos/style.css">#}
+                        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+                        <h2 style="text-align: left;">Cadastro de Sorteio</h2>
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            {{ RForm.as_p }}
+                            <p><input type="submit"/></p>
+                        </form>
+                    </div>
+                    <div ng-hide="ActiveForm!='CTY'">
+                        <h2 style="text-align: left;">Cadastro de Cidade</h2>
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            {{ CForm.as_p }}
+                            <br>
+                            <p><input type="submit"/></p>
+                        </form>
+                    </div>
+                {% endif %}
+                <div ng-hide="ActiveForm!='TCK_A'">
+                    <h2 style="text-align: left;">Ativar Tickets</h2>
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        {{ ActivationForm.as_p }}
+                        <p><input type="submit"/></p>
+                    </form>
+                </div>
+                <div ng-hide="ActiveForm!=null" class="gridListdemoBasicUsage">
+                    <h2 style="width: 100%; text-align: right;">Olá, {{ UserData.first_name }}.</h2>
+
+                    <md-grid-list md-cols-xs="1" md-cols-sm="2" md-cols-md="3" md-cols-gt-md="3" md-rows-gt-sm="3"
+                                  md-row-height="4:2" md-gutter="12px" md-gutter-gt-sm="8px">
+                        <md-grid-tile class="gray" md-rowspan="3" md-colspan="2">
+                            <ng-gauge type="{[{ AngEnv.options.type }]}" size="{[{ AngEnv.options.size }]}"
+                                      thick="{[{ AngEnv.options.thick }]}"
+                                      label="{[{ AngEnv.options.label }]}" append="{[{ AngEnv.options.append }]}"
+                                      prepend="{[{ AngEnv.options.prepend }]}" cap="{[{ AngEnv.options.cap }]}"
+                                      foreground-color="{[{ AngEnv.options.foregroundColor }]}"
+                                      background-color="{[{ AngEnv.options.backgroundColor }]}"
+                                      value="AngEnv.options.value"
+                                      min="AngEnv.options.min" max="AngEnv.options.max"
+                                      thresholds="AngEnv.enableThresholds ? AngEnv.thresholds : AngEnv.empty">
+                            </ng-gauge>
+                        </md-grid-tile>
+                        <md-grid-tile class="red" md-rowspan="1" md-colspan="1">
+                            <h1>{{ ticket_total }}</h1>
+                            <md-grid-tile-footer>
+                                <h3>Total | Emitidos</h3>
+                            </md-grid-tile-footer>
+                        </md-grid-tile>
+                        <md-grid-tile class="yellow" md-rowspan="1" md-colspan="1">
+                            <h1> {{ ticket_total_dir }}</h1>
+                            <md-grid-tile-footer>
+                                <h3>Centro | Emitidos</h3>
+                            </md-grid-tile-footer>
+                        </md-grid-tile>
+                        <md-grid-tile class="green" md-rowspan="1" md-colspan-gt-md="1" md-colspan-gt-xs="2">
+                            <h1>{{ ticket_sold_dir }}</h1>
+                            <md-grid-tile-footer>
+                                <h3>Centro | Vendidos</h3>
+                            </md-grid-tile-footer>
+                        </md-grid-tile>
+                    </md-grid-list>
+                </div>
+                <div ng-hide="ActiveForm!='TCK_E'">
+                    <h2 style="text-align: left;">Editar Ticket</h2>
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        {{ EditForm.as_p }}
+                        <br>
+                        <p><input type="submit"/></p>
+                    </form>
+                </div>
+                <div ng-hide="ActiveForm!='PRF'" style="margin: -1em -2em -1em -2em;">
+                    <md-toolbar>
+                        <div class="md-toolbar-tools">
+                            <h2 class="md-flex" style="text-align: left;color: white;font-weight: bold;">
+                                Informações Pessoais
+                            </h2>
+                        </div>
+                    </md-toolbar>
+                    <div style="text-align: left;" layout="column" layout-gt-sm="row"
+                         layout-align="space-between center" layout-align-gt-sm="space-between start">
+                        {% if UserData.username == user.get_username %}
+                            <div flex="4" style="padding: 1em;word-wrap: break-word;" layout-fill="">
+                                <div class="field-name">Nome:</div>
+                                {{ UserData.first_name }} <br>
+                                <md-divider></md-divider>
+                                <div class="field-name"> Sobrenome:</div>
+                                {{ UserData.last_name }} <br>
+                                <md-divider></md-divider>
+                                <div class="field-name">Usuário:</div>
+                                {{ UserData.username }} <br>
+                                <md-divider></md-divider>
+                                <div class="field-name">Telefone:</div>
+                                {{ SellerData.phone }} <br>
+                                <md-divider></md-divider>
+                                <!-- Último Login: {{ UserData.last_login }} <br> -->
+                                <div class="field-name">E-mail:</div>
+                                {{ SellerData.email }}<br>
+                                <md-divider></md-divider>
+                                <div class="field-name">Centro Acadêmico:</div>
+                                {{ SellerDict }} <br>
+                                <md-divider></md-divider>
+                            </div>
+                            <md-card-title-media flex="1" style="margin: 1em;">
+                                <img ng-src="{{ SellerData.picture }}" alt="Smiley face" class="profile-page"
+                                     err-src="/static/images/profile_4.png" height="100%" width="100%">
+                                <br>
+                            </md-card-title-media>
+                        {% endif %}
+                    </div>
+                </div>
+            </header>
+            <footer>
+                <ul class="icons">
+                    {% block content %}
+                    {% endblock %}
+                </ul>
+            </footer>
+        </md-card>
+        <!-- Footer -->
+        <br>
+    </div>
+
+    <footer id="footer">
+        <ul class="copyright">
+            <li>&copy; LottoHub</li>
+            <li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+        </ul>
+        {% if user.is_superuser %}
+            <section id="LHHeader" class="LHFields" style="color: #414f57;">
+                <ul class="icons">
+                    <a href="/admin" target="_blank">
+                        <li><i class="material-icons LHButtons">security</i></li>
+                    </a>
+                    <a ng-click="ActiveForm='UNI'" href="">
+                        <li><i class="material-icons LHButtons">account_balance</i></li>
+                    </a>
+                    <a ng-click="ActiveForm='RAF'" href="">
+                        <li><i class="material-icons LHButtons">create_new_folder</i></li>
+                    </a>
+                    <a ng-click="ActiveForm='DIR'" href="">
+                        <li><i class="material-icons LHButtons">folder_shared</i></li>
+                    </a>
+                    <a ng-click="ActiveForm='TCK_G'" href="">
+                        <li><i class="material-icons LHButtons">local_activity</i></li>
+                    </a>
+                    <a target="_blank" href="/pdf">
+                        <li><i class="material-icons LHButtons">print</i></li>
+                    </a>
+                    <a href="{% url 'sorteio' %}">
+                        <li><i class="material-icons LHButtons">casino</i></li>
+                    </a>
+                </ul>
+            </section>
+        {% endif %}
+    </footer>
+{% endblock %}
+
+{% block footer %}
+    {{ TForm.media }}
+{% endblock %}
+
+{% block late_script %}
+    <script>
+        if ('addEventListener' in window) {
+            window.addEventListener('load', function () {
+                document.body.className = document.body.className.replace(/\bis-preload\b/, '');
+            });
+            document.body.className += (navigator.userAgent.match(/(MSIE|rv:11\.0)/) ? ' is-ie' : '');
+        }
+        window.history.replaceState(null, null, window.location.href);
+    </script>
+    {% if user.is_superuser %}
+        <script>
+            $(function () {
+                $("#datepicker").datepicker({
+                    beforeShow: function (input, inst) {
+                        let widget = $(inst).datepicker('widget');
+                        widget.css('margin-left', $(input).outerWidth() - widget.outerWidth());
+                    },
+                    dateFormat: 'dd/mm/yy',
+                    dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
+                    dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S', 'D'],
+                    dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                    monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+                    monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                    nextText: 'Próximo',
+                    prevText: 'Anterior'
+                });
+            });
+        </script>
+    {% endif %}
+{% endblock %}
+
+{% block angularJS %}
+    <script>
+
+        configApp.$inject = ['$mdThemingProvider'];
+
+        function configApp($mdThemingProvider) {
+            $mdThemingProvider.theme('default')
+                .primaryPalette('teal', {
+                    'default': '400', // by default use shade 400 from the pink palette for primary intentions
+                    'hue-1': '100', // use shade 100 for the <code>md-hue-1</code> class
+                    'hue-2': '600', // use shade 600 for the <code>md-hue-2</code> class
+                    'hue-3': 'A100' // use shade A100 for the <code>md-hue-3</code> class
+                })
+                // If you specify less than all of the keys, it will inherit from the
+                // default shades
+                .accentPalette('amber', {
+                    'default': '200' // use shade 200 for default, and keep all other shades the same
+                });
+        }
+        angular.module('LottoApp', ['ngMaterial', 'angularjs-gauge', 'ngMessages', 'ngSanitize', "ngAnimate", "ngRoute"], function ($interpolateProvider, $httpProvider) {
+            $interpolateProvider.startSymbol('{[{');
+            $interpolateProvider.endSymbol('}]}');
+        })
+            .config(['$httpProvider', '$locationProvider', function ($httpProvider, $locationProvider) {
+                $httpProvider.defaults.xsrfCookieName = 'csrftoken';
+                $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+            }])
+            .config(
+                function ($mdIconProvider, $$mdSvgRegistry) {
+                    // Add default icons from angular material
+                    $mdIconProvider
+                        .icon('md-close', $$mdSvgRegistry.mdClose)
+                        .icon('md-menu', $$mdSvgRegistry.mdMenu)
+                        .icon('md-toggle-arrow', $$mdSvgRegistry.mdToggleArrow)
+                        .icon('md-tabs-arrow', $$mdSvgRegistry.mdTabsArrow);
+                }
+            )
+            .config(configApp)
+            .filter('ObjectLength', function () {
+                return function (object) {
+                    return Object.keys(object).length;
+                }
+            })
+            .controller('dataCtrl', ['$location', '$scope', "$mdDialog", '$timeout', '$http', '$mdToast', '$location', '$window', '$timeout', function ($location, $scope, $mdDialog, $timeout, $http, $window) {
+                //
+                $scope.$on('$locationChangeSuccess', function (event) {
+                    let pageUrl = $location.absUrl();
+                    var profile_page = pageUrl.search('profile') > -1;
+                    var activation_page = pageUrl.search('activation') > -1;
+                    var edit_page = pageUrl.search('edit') > -1;
+                    if (profile_page) {
+                        $scope.ActiveForm = 'PRF';
+                    } else if (activation_page) {
+                        $scope.ActiveForm = 'TCK_A';
+                    } else if (edit_page) {
+                        $scope.ActiveForm = 'TCK_E';
+                    } else {
+                        $scope.ActiveForm = null;
+                    }
+                });
+                //
+                $scope.AngEnv = {
+                    Url: window.location.pathname
+                };
+                //
+                let gauge_label = ((1 < {{ ticket_sold }}) ? 'bilhetes' : 'bilhete');
+                gauge_label = ``;
+                //
+                $scope.AngEnv.options = {
+                    type: 'full',
+                    cap: 'butt',
+                    size: parseInt(window.innerWidth / 5),
+                    value: {{ ticket_sold }},
+                    thick: parseInt(window.innerWidth / 40),
+                    label: gauge_label,
+                    f_size: parseInt(window.innerWidth / 6),
+                    f_value: {{ ticket_sold }},
+                    f_thick: parseInt(window.innerWidth / 40),
+                    f_label: '%',
+                    append: '',
+                    min: 0,
+                    max: 1500,
+                    f_min: 0,
+                    f_max: 100,
+                    foregroundColor: 'rgba(0, 150, 136, 1)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)'
+                };
+                //
+                $scope.AngEnv.enableThresholds = true;
+                $scope.AngEnv.thresholds = {
+                    '1500': {color: 'green'},
+                    '1100': {color: 'yellow'},
+                    '800': {color: 'orange'},
+                    '500': {color: "coral"},
+                    '0': {color: 'red'}
+                };
+                $scope.AngEnv.empty = {};
+                //
+                $(window).resize(function () {
+                    gauge_label = ((1 < {{ ticket_sold }}) ? 'bilhetes' : 'bilhete');
+                    $scope.AngEnv.options.size = parseInt(window.innerWidth / 5);
+                    $scope.AngEnv.options.thick = parseInt(window.innerWidth / 40);
+                    $scope.$apply();
+                });
+                //
+                $scope.$watch('ActiveForm', function (newValue, oldValue) {
+                    var someVar;
+                    document.body.className = document.body.className.trim() + " is-preload";
+                    $timeout(function () {
+                        document.body.className = document.body.className.replace(/\bis-preload\b/, '')
+                    }, 100);
+                    angular.copy(someVar, $scope.someVar);
+                });
+                //
+                $scope.cancel = function () {
+                    $mdDialog.cancel();
+                };
+                $scope.showConfirm = function (ev) {
+                    // Appending dialog to document.body to cover sidenav in docs app
+                    // TODO MOVE MESSAGE TO SYSTEM CODE
+                    var confirm = $mdDialog.confirm()
+                        .title('Would you like to delete your debt?')
+                        .textContent('All of the banks have agreed to forgive you your debts.')
+                        .ariaLabel('Lucky day')
+                        .targetEvent(ev)
+                        .ok('Please do it!')
+                        .cancel('Sounds like a scam');
+
+                    $mdDialog.show(confirm).then(function () {
+                        // TODO MOVE MESSAGE TO SYSTEM CODE
+                        $scope.status = 'You decided to get rid of your debt.';
+                    }, function () {
+                        // TODO MOVE MESSAGE TO SYSTEM CODE
+                        $scope.status = 'You decided to keep your debt.';
+                    });
+                };
+                $scope.nyx = function (code, method) {
+                    $http({
+                        method: 'GET',
+                        url: '/nyx/' + $scope.PostForm.Store + '/' + method + '/' + code + '/',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'}  // set the headers so angular passing info as form data (not request payload)
+                    })
+                        .success(function (data) {
+                            $scope.AngEnv[method] = data[method];
+                        })
+                        .finally(function () {
+                            //
+                        });
+                };
+                //
+            }])
+            .directive('errSrc', function () {
+                return {
+                    link: function (scope, element, attrs) {
+                        element.bind('error', function () {
+                            if (attrs.src !== attrs.errSrc) {
+                                attrs.$set('src', attrs.errSrc);
+                            }
+                        });
+
+                        attrs.$observe('ngSrc', function (value) {
+                            if (!value && attrs.errSrc) {
+                                attrs.$set('src', attrs.errSrc);
+                            }
+                        });
+                    }
+                }
+            })
+    </script>
+{% endblock angularJS %}

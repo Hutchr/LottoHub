@@ -1,0 +1,171 @@
+{% extends "__base__.html" %}
+
+{% load static %}
+
+{% block title %}LottoHUB by HutchR{% endblock %}
+
+{% block scripts %}{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="/static/assets/css/dashboard.css"/>
+    <noscript>
+        <link rel="stylesheet" href="assets/css/noscript.css"/>
+    </noscript>
+{% endblock %}
+
+{% block theme_style %} {% endblock %}
+
+{% block body %}
+    <div id="wrapper">
+        <!-- Main -->
+        <md-card id="main">
+            <header>
+             <span class="avatar">
+                <img src="/static/images/LottoHub_logo.png" onclick="location.href='/'" on width="50px" height="50px"
+                     alt=""/>
+            </span>
+                <h2 style="text-align: left;" ng-hide="AngEnv.status==null">Situação do Bilhete</h2>
+                <hr ng-hide="AngEnv.status==null">
+                <div style="text-align: left;" ng-if="AngEnv.status==true">
+                    <div class="field-name">Status:
+                        <div ng-if="!AngEnv.TicketStatus" style="color: red;"> INATIVO</div>
+                        <div ng-if="AngEnv.TicketStatus" style="color: green;"> ATIVO</div>
+                    </div>
+                    <br>
+                    <div class="field-name" ng-hide="AngEnv.status==false">Nome:</div>
+                    {[{ AngEnv.Nome }]} <br>
+                    <div class="field-name" ng-hide="AngEnv.status==false">E-mail:</div>
+                    {[{ AngEnv.Email }]} <br>
+                    <div class="field-name" ng-hide="AngEnv.status==false">Telefone:</div>
+                    {[{ AngEnv.Phone }]} <br>
+                    <div class="field-name">Vendedor:</div>
+                    {[{ AngEnv.Seller }]}
+                </div>
+                <div style="text-align: left;" ng-if="AngEnv.status==false" layout="column"
+                     layout-align="space-between center">
+                    <p>Não existe bilhete cadastrado com as informações enviadas.<br>
+                        Verifique os dados presentes no canhoto do bilhete e tente novamente.
+                    </p>
+                    <div style="text-align: right;width: 100%;">
+                        <a href="javascript:history.back()" class="button">Voltar</a>
+                    </div>
+                </div>
+                <hr ng-hide="AngEnv.status==null">
+                <div ng-hide="AngEnv.status!=null">
+                    <h2 style="text-align: left;">Verificar Bilhete</h2>
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        {{ CheckForm.as_p }}
+                        <p style="text-align: left;">
+                        <a href="javascript:history.back()" class="button">Voltar</a>   <input type="submit"/></p>
+                    </form>
+                </div>
+                <div style="text-align: left;" ng-if="AngEnv.TicketStatus==true">
+                    Boa Sorte!
+                </div>
+                <div style="text-align: left;" ng-if="AngEnv.TicketStatus==false" layout="row"
+                     layout-align="space-between center">
+                    <p>Notifique seu vendedor!</p>
+                    <md-button class="md-raised md-warn">Notificar!</md-button>
+                </div>
+            </header>
+        </md-card>
+        <!-- Footer -->
+        <footer id="footer">
+            <ul class="copyright">
+                <li>&copy; LottoHub</li>
+                <li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+            </ul>
+        </footer>
+    </div>
+{% endblock %}
+
+
+{% block footer %}
+    {{ TForm.media }}
+{% endblock %}
+
+{% block late_script %}
+    <script>
+        if ('addEventListener' in window) {
+            window.addEventListener('load', function () {
+                document.body.className = document.body.className.replace(/\bis-preload\b/, '');
+                $('#main').scope().$apply();
+            });
+            document.body.className += (navigator.userAgent.match(/(MSIE|rv:11\.0)/) ? ' is-ie' : '');
+        }
+        window.history.replaceState(null, null, window.location.href);
+    </script>
+{% endblock %}
+
+{% block angularJS %}
+    <script>
+        angular.module('LottoApp', ['ngMaterial', 'ngMessages', 'ngSanitize', "ngAnimate", "ngRoute"], function ($interpolateProvider, $httpProvider) {
+            $interpolateProvider.startSymbol('{[{');
+            $interpolateProvider.endSymbol('}]}');
+        })
+            .config(['$httpProvider', '$locationProvider', function ($httpProvider, $locationProvider) {
+                $httpProvider.defaults.xsrfCookieName = 'csrftoken';
+                $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+            }])
+            .config(
+                function ($mdIconProvider, $$mdSvgRegistry) {
+                    // Add default icons from angular material
+                    $mdIconProvider
+                        .icon('md-close', $$mdSvgRegistry.mdClose)
+                        .icon('md-menu', $$mdSvgRegistry.mdMenu)
+                        .icon('md-toggle-arrow', $$mdSvgRegistry.mdToggleArrow)
+                        .icon('md-tabs-arrow', $$mdSvgRegistry.mdTabsArrow);
+                }
+            )
+            .filter('ObjectLength', function () {
+                return function (object) {
+                    return Object.keys(object).length;
+                }
+            })
+            .controller('dataCtrl', ['$scope', "$mdDialog", '$timeout', '$http', '$mdToast', '$location', '$window', function ($scope, $mdDialog, $timeout, $http) {
+                //
+                $scope.status = null;
+                $scope.AngEnv = {{ cResponse|safe }}
+                ;
+                //
+                $scope.cancel = function () {
+                    $mdDialog.cancel();
+                };
+                $scope.showConfirm = function (ev) {
+                    // Appending dialog to document.body to cover sidenav in docs app
+                    // TODO MOVE MESSAGE TO SYSTEM CODE
+                    var confirm = $mdDialog.confirm()
+                        .title('Would you like to delete your debt?')
+                        .textContent('All of the banks have agreed to forgive you your debts.')
+                        .ariaLabel('Lucky day')
+                        .targetEvent(ev)
+                        .ok('Please do it!')
+                        .cancel('Sounds like a scam');
+
+                    $mdDialog.show(confirm).then(function () {
+                        // TODO MOVE MESSAGE TO SYSTEM CODE
+                        $scope.status = 'You decided to get rid of your debt.';
+                    }, function () {
+                        // TODO MOVE MESSAGE TO SYSTEM CODE
+                        $scope.status = 'You decided to keep your debt.';
+                    });
+                };
+                $scope.nyx = function (code, method) {
+                    $http({
+                        method: 'GET',
+                        url: '/nyx/' + $scope.PostForm.Store + '/' + method + '/' + code + '/',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'}  // set the headers so angular passing info as form data (not request payload)
+                    })
+                        .success(function (data) {
+                            $scope.AngEnv[method] = data[method];
+                        })
+                        .finally(function () {
+                            //
+                        });
+                };
+                //
+            }])
+
+    </script>
+{% endblock angularJS %}

@@ -1,0 +1,358 @@
+{% extends "__base__.html" %}
+
+{% load static %}
+
+{% block title %}LottoHUB | Sorteio{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="/static/assets/css/dashboard.css"/>
+    <link rel="stylesheet" href="/static/assets/css/LotteryHub.css"/>
+    <link rel="stylesheet" href="/static/assets/css/angular-material.css"/>
+    <noscript>
+        <link rel="stylesheet" href="/static/assets/css/noscript.css"/>
+    </noscript>
+    <script src="/static/assets/js/confetti.index.min.js"></script>
+{% endblock %}
+
+{% block body %}
+    <canvas id="confetti-holder"></canvas>
+    <div id="wrapper">
+        <section id="LHHeader" class="LHFields">
+            <ul class="icons">
+                <a ng-click="toggleLeft()" href="">
+                    <li><i class="material-icons LHButtons">settings</i></li>
+                </a>
+                <a href="/admin" target="_blank">
+                    <li><i class="material-icons LHButtons">security</i></li>
+                </a>
+                <a href="/dashboard">
+                    <li><i class="material-icons LHButtons">dashboard</i></li>
+                </a>
+                <a href="/dashboard/?profile">
+                    <li><i class="material-icons LHButtons">person_pin</i></li>
+                </a>
+                <a href="{% url 'logout' %}">
+                    <li><i class="material-icons LHButtons">exit_to_app</i></li>
+                </a>
+            </ul>
+        </section>
+        <br>
+        <!-- Main -->
+        <md-card id="main" layout="column" layout-align="space-between space-between" ng-hide="max_winners<=0">
+            <div layout="row" layout-align="space-between center"
+                    {#                 style="margin-bottom: 0.5em;"#}
+                 ng-repeat="_ in ((_ = []) && (_.length=max_winners) && _) track by $index">
+                <div class="odometer">
+                    <div class="digit">
+                        <div id='display{[{$index+1}]}' class="digit-container digit-one">
+                            {[{ tickets[$index] }]}
+                            {[{ tickets[$index] }]}
+                            {[{ tickets[$index] }]}
+                        </div>
+                    </div>
+                </div>
+                <div class="winner-name odometer digit-one digit digit-name">
+                    <div class="digit-container digit-one display{[{$index+1}]}">
+                        {[{ winners[$index] }]}<br>
+                        {[{ winners[$index] }]}<br>
+                        {[{ winners[0] }]}
+                    </div>
+                </div>
+                <div class="winner-name odometer digit-one digit digit-dir">
+                    <div class="digit-container digit-one display{[{$index+1}]}">
+                        {[{ directories[directory[$index]] }]}
+                        {[{ directories[directory[$index]] }]}
+                        {[{ directories[directory[$index]] }]}
+                    </div>
+                </div>
+            </div>
+        </md-card>
+        <md-button class="lotto-button md-fab" ng-click="sorteio()" id="LottoButton" ng-disabled="max_winners<=0">
+            <i class="material-icons LHButtons">casino</i>
+        </md-button>
+    </div>
+    <md-sidenav class="md-sidenav-left" md-component-id="left" md-whiteframe="4" id="leftSideNav"
+                md-disable-backdrop="true">
+        <!--
+        https://stackoverflow.com/questions/39287044/angular-material-how-to-build-a-sidenav-menu-that-control-a-md-content
+        https://robferguson.org/blog/2018/11/10/angular-material-toolbar-and-sidenav/
+        -->
+        <md-toolbar layout="row" layout-align="space-between center">
+            <h1 class="md-toolbar-tools">Configurações de Sorteio</h1>
+            <md-button class="md-icon-button" ng-click="close()">
+                <i class="material-icons">close</i>
+            </md-button>
+        </md-toolbar>
+        <md-content layout-padding="" layout="column" layout-align="start start">
+            <form>
+                {% csrf_token %}
+                {{ configFORM.as_p }}
+            </form>
+            <audio id='audio_player' loop="true">
+                <source id="oggSource" type="audio/ogg" src='/static/media/showTime.min.ogg'/>
+            </audio>
+        </md-content>
+    </md-sidenav>
+{% endblock %}
+
+
+{% block footer %}
+    {{ configFORM.media }}
+{% endblock %}
+
+{% block late_script %}
+    <script>
+        if ('addEventListener' in window) {
+            window.addEventListener('load', function () {
+                document.body.className = document.body.className.replace(/\bis-preload\b/, '');
+            });
+            document.body.className += (navigator.userAgent.match(/(MSIE|rv:11\.0)/) ? ' is-ie' : '');
+        }
+        window.history.replaceState(null, null, window.location.href);
+    </script>
+
+{% endblock %}
+
+{% block angularJS %}
+    <script>
+        angular.module('LottoApp', ['ngMaterial', 'ngMessages', 'ngSanitize', "ngAnimate", "ngRoute"], function ($interpolateProvider, $httpProvider) {
+            $interpolateProvider.startSymbol('{[{');
+            $interpolateProvider.endSymbol('}]}');
+        })
+            .config(['$httpProvider', '$locationProvider', function ($httpProvider, $locationProvider) {
+                $httpProvider.defaults.xsrfCookieName = 'csrftoken';
+                $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+            }])
+            .config(
+                function ($mdIconProvider, $$mdSvgRegistry) {
+                    // Add default icons from angular material
+                    $mdIconProvider
+                        .icon('md-close', $$mdSvgRegistry.mdClose)
+                        .icon('md-menu', $$mdSvgRegistry.mdMenu)
+                        .icon('md-toggle-arrow', $$mdSvgRegistry.mdToggleArrow)
+                        .icon('md-tabs-arrow', $$mdSvgRegistry.mdTabsArrow);
+                }
+            )
+            .filter('ObjectLength', function () {
+                return function (object) {
+                    return Object.keys(object).length;
+                }
+            })
+            .controller('dataCtrl', ['$location', '$scope', "$mdDialog", '$timeout', '$http', '$mdSidenav', '$mdToast', '$location', '$window', '$timeout', function ($location, $scope, $mdDialog, $timeout, $http, $mdSidenav, $window) {
+                // $scope.ticket = 'be590e1584';
+                $scope.toShow = "home"; // Default
+                //
+                $scope.toggleLeft = function () {
+                    $mdSidenav("left")
+                        .toggle();
+                };
+                //
+                $scope.close = function () {
+                    $mdSidenav('left').close();
+                };
+                //
+                $scope.show = function (toShow) {
+                    $scope.toShow = toShow;
+                };
+                //
+                $scope.directories = {{ directories }};
+                //
+                $scope.audioStop = function () {
+                    let audio_player = $('#audio_player')[0];
+                    audio_player.currentTime = 0;
+                    audio_player.pause();
+                };
+                $scope.audioPlay = function () {
+                    let audio_player = $('#audio_player')[0];
+                    audio_player.currentTime = 0;
+                    audio_player.play();
+                };
+                //
+                $scope.prize_code = null;
+                $scope.getRaffleID = function () {
+                    value = $("form").serializeArray()[2]['value'];
+                    $scope.max_winners = parseInt(value.split('#')[1]);
+                    $scope.tickets = Array($scope.max_winners).fill('');
+                    $scope.winners = Array($scope.max_winners).fill('');
+                    $scope.idxs = Array($scope.max_winners).fill('');
+                    $scope.directory = Array($scope.max_winners).fill('');
+                    $scope.close();
+                };
+                //
+                $scope.config = {};
+                $scope.hostUrl = location.host;
+                $scope.max_winners = 0;
+                $scope.swaps_floor = 600;
+                $scope.swaps_ceil = 1200;
+                $scope.swaps_max = 0;
+                $scope.tickets = Array($scope.max_winners).fill('');
+                $scope.winners = Array($scope.max_winners).fill('');
+                $scope.idxs = Array($scope.max_winners).fill('');
+                $scope.directory = Array($scope.max_winners).fill('');
+                // https://agezao.github.io/confetti-js/
+                $scope.confetti = null;
+                $scope.appstate = {
+                    target: 'confetti-holder',
+                    max: 120,
+                    size: 3,
+                    animate: true,
+                    props: ['circle', 'square', 'triangle', 'line', {
+                        type: 'svg',
+                        src: '/static/images/hat.svg',
+                        weight: 0.2,
+                        size: 25
+                    }],
+                    colors: [[165, 104, 246], [230, 61, 135], [0, 199, 228], [253, 214, 126]],
+                    clock: 25,
+                    rotate: true,
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                };
+                //
+                $scope.$on('$locationChangeSuccess', function (event) {
+
+                    let counter = 0;
+                    let res = window.setInterval(function () {
+                        /// call your function here
+                        // $scope.ticket = $scope.getRandomSpan();
+                        //$scope.nyx();
+                        // console.log($scope.ticket);
+                        counter = counter + 1;
+                        $scope.$apply();
+                        if (counter >= $scope.swaps_max) {
+                            clearInterval(res);
+                        }
+                    }, 50);
+                });
+                //
+                $scope.ticketID2 = function (IDX, ID) {
+                    let e = $(ID);
+                    e.removeClass('paused');
+                    let counter = 0;
+                    let res = window.setInterval(function () {
+                        $scope.nyx($scope.hostUrl + '/nyx/');
+                        $scope.tickets[IDX] = $scope.temp['id'];
+                        counter = counter + 1;
+                        //
+                        if (counter >= $scope.swaps_max) {
+                            let e = $(ID);
+                            e.addClass('paused');
+                            let f = e.clone(true);
+                            //e.remove();
+                            e.replaceWith(f);
+                            clearInterval(res);
+                        }
+                    }, 50);
+                };
+                //
+                $scope.sorteio = function () {
+                    $scope.audioStop();
+                    if ($scope.confetti != null) {
+                        $scope.confetti.clear();
+                        $scope.confetti = null;
+                    }
+                    $scope.audioPlay();
+                    for (let i = 0; i < $scope.max_winners; i++) {
+                        let classID = 'display' + (i + 1);
+                        $timeout(function () {
+                            $scope.ticketID(i, classID)
+                        }, i * 1000);
+                    }
+                };
+                //
+                $scope.nyx = function (url) {
+                    $http({
+                        method: 'GET',
+                        url: url,
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'}  // set the headers so angular passing info as form data (not request payload)
+                    })
+                        .success(function (data) {
+                            $scope.temp = data;
+                        })
+                        .finally(function (data) {
+                            // return data['id'];
+                            //
+                        })
+                        .then(function (data) {
+                            // $scope.ticket = data['id'];
+                            // return data['id'];
+                        });
+                };
+                //
+                $(window).resize(function () {
+                    //
+                });
+                //
+                $scope.poll = null;
+                $scope.sorteioUrl = 'http://' + $scope.hostUrl + '/sorteio2/';
+                $scope.nyx($scope.sorteioUrl);
+                //
+                $scope.ticketID = function (IDX, ID) {
+                    $scope.poll = $scope.temp;
+                    $scope.swaps_max = ($scope.swaps_floor - $scope.swaps_ceil) * Math.pow(Math.E, ((-$scope.max_winners / 8) ** 3)) + $scope.swaps_ceil;
+                    //$scope.swaps_max = $scope.poll.length;
+                    let counter = 1;
+                    $('#' + ID).removeClass('paused');
+                    $('.' + ID).removeClass('paused');
+                    let res = window.setInterval(function () {
+                        let max = $scope.poll.length - 1;
+                        //console.log(max);
+                        let ticket = Math.floor((Math.random() * max));
+                        let name = $scope.poll[ticket]['name'];
+                        let id = $scope.poll[ticket]['id'];
+                        let directory = $scope.poll[ticket]['directory'];
+                        //
+                        $scope.winners[IDX] = name;
+                        $scope.tickets[IDX] = id;
+                        $scope.$apply();
+                        $scope.directory[IDX] = directory;
+                        $scope.idxs[IDX] = ticket;
+                        counter = counter + 1;
+                        //
+                        if (counter >= $scope.swaps_max) {
+                            $('#' + ID).addClass('paused');
+                            $('.' + ID).addClass('paused');
+                            clearInterval(res);
+                            $scope.poll.splice(ticket, 1);
+                            $scope.$apply();
+                            if ($scope.confetti == null) {
+                                $scope.confetti = new ConfettiGenerator($scope.appstate);
+                                $scope.confetti.render();
+                            }
+                            //
+                            $timeout(function () {
+                                if ($scope.confetti != null) {
+                                    $scope.confetti.clear();
+                                    $scope.confetti = null;
+                                }
+                            }, 5 * 60 * 1000);
+                            //
+                            $timeout(function () {
+                                if ($scope.confetti != null) {
+                                    $scope.audioStop();
+                                }
+                            }, $scope.max_winners * 1000);
+                        }
+                    }, 50);
+                };
+                //
+            }])
+            .directive('errSrc', function () {
+                return {
+                    link: function (scope, element, attrs) {
+                        element.bind('error', function () {
+                            if (attrs.src !== attrs.errSrc) {
+                                attrs.$set('src', attrs.errSrc);
+                            }
+                        });
+
+                        attrs.$observe('ngSrc', function (value) {
+                            if (!value && attrs.errSrc) {
+                                attrs.$set('src', attrs.errSrc);
+                            }
+                        });
+                    }
+                }
+            })
+    </script>
+{% endblock %}
