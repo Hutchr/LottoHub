@@ -55,17 +55,17 @@ See also, a [ready-made application](https://github.com/heroku/python-getting-st
 - [WhiteNoise](https://warehouse.python.org/project/whitenoise/)
 - [dj-database-url](https://warehouse.python.org/project/dj-database-url/)
 
-## Dashboard
+## Dashboard Page
 ![Dashboard](dev/dashboard.png)
 
-## Dashboard
+## Print Raffle Tickets
 ![print](dev/print.png)
 
-## Dashboard
+## User/Seller Profile Page
 ![profile](dev/profile.png)
 
-## Dashboard
+## Raffle Prizes
 ![raffle](dev/raffle.png)
 
-## Dashboard
+## Ticket Validation
 ![validation](dev/validation.png)
