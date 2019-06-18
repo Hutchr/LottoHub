@@ -9,6 +9,11 @@ Demo [here](https://lottohub.herokuapp.com/).
 - Production-ready configuration for Static Files, Database Settings, Gunicorn, etc.
 - Enhancements to Django's static file serving functionality via WhiteNoise.
 - Latest Python 3.6 runtime environment.
+- Consider a college environment with multiple departments and fraternities as HQs.
+
+## Multilingual Support
+
+- If you master muli language implementation, please submit your pull request
 
 ## How to Install and Use on HEROKU
 
