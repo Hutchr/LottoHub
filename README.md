@@ -57,3 +57,15 @@ See also, a [ready-made application](https://github.com/heroku/python-getting-st
 
 ## Dashboard
 ![Dashboard](dev/dashboard.png)
+
+## Dashboard
+![print](dev/print.png)
+
+## Dashboard
+![profile](dev/profile.png)
+
+## Dashboard
+![raffle](dev/raffle.png)
+
+## Dashboard
+![validation](dev/validation.png)
