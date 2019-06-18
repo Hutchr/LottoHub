@@ -56,5 +56,4 @@ See also, a [ready-made application](https://github.com/heroku/python-getting-st
 - [dj-database-url](https://warehouse.python.org/project/dj-database-url/)
 
 ## Dashboard
-
-
+![Dashboard](dev/dashboard.png)
