@@ -1,6 +1,6 @@
-# Heroku Django Starter Template
+# Heroku-Ready Django Raffle System
 
-An utterly fantastic project starter template for Django 2.0.
+An utterly fantastic Raffle System built upon Django 2.0.
 
 ## Features
 
@@ -8,7 +8,7 @@ An utterly fantastic project starter template for Django 2.0.
 - Enhancements to Django's static file serving functionality via WhiteNoise.
 - Latest Python 3.6 runtime environment.
 
-## How to Use
+## How to Install and Use on HEROKU
 
 To use this project, follow these steps:
 
