@@ -2,6 +2,8 @@
 
 An utterly fantastic Raffle System built upon Django 2.0.
 
+Demo [here](https://lottohub.herokuapp.com/).
+
 ## Features
 
 - Production-ready configuration for Static Files, Database Settings, Gunicorn, etc.
